@@ -14,11 +14,23 @@ public class Animal
     public DateTime? DateSterilisation { get; set; }
     public DateTime? DateNaissance { get; set; }
     public DateTime? DateDeces { get; set; }
+    public DateTime? DateEntree { get; set; }
+    public string? MotifEntree { get; set; }
+    public string? ContactEntree { get; set; }
+    public DateTime? DateSortie { get; set; }
+    public string? MotifSortie { get; set; }
+    public string? ContactSortie { get; set; }
     public string? Description { get; set; }
     public string? Particularites { get; set; }
 
     public bool EstDecede => DateDeces.HasValue;
+    public string NomAvecId => $"{Nom} [{IdAnimal.Trim()}]";
+    public string TypeTexte => Type.ToDisplay();
+    public string SexeTexte => Sexe.ToDisplay();
     public string CouleursTexte => Couleurs.Count > 0 ? string.Join(", ", Couleurs) : "(aucune)";
+    public string SteriliseTexte => Sterilise ? "Oui" : "Non";
+    public string MotifEntreeTexte => EnumsConversion.MotifEntreeAffichage(MotifEntree);
+    public string MotifSortieTexte => EnumsConversion.MotifSortieAffichage(MotifSortie);
 
     public DateTime? DateEntreeRefuge()
     {

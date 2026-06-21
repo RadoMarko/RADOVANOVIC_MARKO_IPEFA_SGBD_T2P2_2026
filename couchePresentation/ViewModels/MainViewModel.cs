@@ -22,6 +22,7 @@ public class MainViewModel : ObservableObject
     private readonly ContactService _contactService;
     private readonly AdoptionService _adoptionService;
     private readonly AccueilService _accueilService;
+    private readonly VaccinationService _vaccinationService;
 
     private string _statusMessage = "Prêt.";
     private string _errorMessage = string.Empty;
@@ -44,6 +45,8 @@ public class MainViewModel : ObservableObject
     public ObservableCollection<Compatibilite> CompatibilitesAnimal { get; } = new();
     public ObservableCollection<FamilleAccueil> AccueilsParAnimal { get; } = new();
     public ObservableCollection<FamilleAccueil> AccueilsParFamille { get; } = new();
+    public ObservableCollection<Animal> AnimauxAvecAccueil { get; } = new();
+    public ObservableCollection<PersonneContact> ContactsAvecAccueil { get; } = new();
     public ObservableCollection<Vaccin> Vaccins { get; } = new();
     public ObservableCollection<Vaccination> VaccinationsAnimal { get; } = new();
 
@@ -54,10 +57,13 @@ public class MainViewModel : ObservableObject
     public IReadOnlyList<ValeurCompatibilite> ValeursCompatibilite { get; } = Enum.GetValues<ValeurCompatibilite>();
 
     public ICommand RafraichirCommand { get; }
+    public ICommand NouveauContactCommand { get; }
     public ICommand AjouterContactCommand { get; }
     public ICommand ModifierContactCommand { get; }
     public ICommand SupprimerContactCommand { get; }
     public ICommand AjouterAnimalCommand { get; }
+    public ICommand NouvelAnimalCommand { get; }
+    public ICommand ModifierAnimalCommand { get; }
     public ICommand ChargerDetailsAnimalCommand { get; }
     public ICommand ModifierInfosAnimalCommand { get; }
     public ICommand EffacerDescriptionCommand { get; }
@@ -71,6 +77,7 @@ public class MainViewModel : ObservableObject
     public ICommand AjouterAdoptionCommand { get; }
     public ICommand ModifierStatutAdoptionCommand { get; }
     public ICommand AjouterAccueilCommand { get; }
+    public ICommand ModifierAccueilCommand { get; }
     public ICommand ChargerAccueilsCommand { get; }
     public ICommand AjouterVaccinCommand { get; }
     public ICommand SupprimerVaccinCommand { get; }
@@ -80,14 +87,18 @@ public class MainViewModel : ObservableObject
     public MainViewModel()
     {
         _contactService = new ContactService(_contactDAO);
-        _adoptionService = new AdoptionService(_adoptionDAO, _animalDAO, _motifSortieDAO, _sortieDAO);
-        _accueilService = new AccueilService(_animalDAO, _familleAccueilDAO);
+        _adoptionService = new AdoptionService(_adoptionDAO, _animalDAO, _motifEntreeDAO, _motifSortieDAO, _sortieDAO);
+        _accueilService = new AccueilService(_animalDAO, _familleAccueilDAO, _motifEntreeDAO, _motifSortieDAO, _sortieDAO);
+        _vaccinationService = new VaccinationService(_vaccinationDAO);
 
         RafraichirCommand = new RelayCommand(_ => RafraichirTout());
-        AjouterContactCommand = new RelayCommand(_ => AjouterContact());
+        NouveauContactCommand = new RelayCommand(_ => PreparerNouveauContact());
+        AjouterContactCommand = new RelayCommand(_ => AjouterContact(), _ => PeutAjouterContact);
         ModifierContactCommand = new RelayCommand(_ => ModifierContact(), _ => ContactSelectionne != null);
         SupprimerContactCommand = new RelayCommand(_ => SupprimerContact(), _ => ContactSelectionne != null);
-        AjouterAnimalCommand = new RelayCommand(_ => AjouterAnimal());
+        AjouterAnimalCommand = new RelayCommand(_ => AjouterAnimal(), _ => PeutAjouterAnimal);
+        NouvelAnimalCommand = new RelayCommand(_ => PreparerNouvelAnimal());
+        ModifierAnimalCommand = new RelayCommand(_ => ModifierAnimal(), _ => AnimalGestionSelectionne != null);
         ChargerDetailsAnimalCommand = new RelayCommand(_ => ChargerDetailsAnimal(), _ => AnimalGestionSelectionne != null);
         ModifierInfosAnimalCommand = new RelayCommand(_ => ModifierInfosAnimal(), _ => AnimalGestionSelectionne != null);
         EffacerDescriptionCommand = new RelayCommand(_ => EffacerDescription(), _ => AnimalGestionSelectionne != null);
@@ -101,6 +112,7 @@ public class MainViewModel : ObservableObject
         AjouterAdoptionCommand = new RelayCommand(_ => AjouterAdoption());
         ModifierStatutAdoptionCommand = new RelayCommand(_ => ModifierStatutAdoption(), _ => AdoptionSelectionnee != null);
         AjouterAccueilCommand = new RelayCommand(_ => AjouterAccueil(), _ => AnimalAccueilSelectionne != null && ContactAccueilSelectionne != null);
+        ModifierAccueilCommand = new RelayCommand(_ => ModifierAccueil(), _ => AccueilSelectionne != null);
         ChargerAccueilsCommand = new RelayCommand(_ => ChargerAccueils());
         AjouterVaccinCommand = new RelayCommand(_ => AjouterVaccin());
         SupprimerVaccinCommand = new RelayCommand(_ => SupprimerVaccin(), _ => VaccinSelectionne != null);
@@ -109,6 +121,7 @@ public class MainViewModel : ObservableObject
 
         DateEntreeAnimal = DateTime.Today;
         DateDemandeAdoption = DateTime.Today;
+        DateChangementStatutAdoption = DateTime.Today;
         DateSortieAnimal = DateTime.Today;
         DateDebutAccueil = DateTime.Today;
         DateVaccination = DateTime.Today;
@@ -131,6 +144,8 @@ public class MainViewModel : ObservableObject
     public string VaccinErrorMessage { get => _vaccinErrorMessage; set => SetProperty(ref _vaccinErrorMessage, value); }
     public string VaccinationErrorMessage { get => _vaccinationErrorMessage; set => SetProperty(ref _vaccinationErrorMessage, value); }
     public Brush StatusBrush { get => _statusBrush; set => SetProperty(ref _statusBrush, value); }
+    public bool PeutAjouterContact => ContactSelectionne == null;
+    public bool PeutAjouterAnimal => AnimalGestionSelectionne == null;
 
     private string _contactNom = string.Empty;
     private string _contactPrenom = string.Empty;
@@ -166,7 +181,10 @@ public class MainViewModel : ObservableObject
         get => _contactSelectionne;
         set
         {
-            if (!SetProperty(ref _contactSelectionne, value) || value == null) return;
+            if (!SetProperty(ref _contactSelectionne, value)) return;
+            OnPropertyChanged(nameof(PeutAjouterContact));
+            CommandManager.InvalidateRequerySuggested();
+            if (value == null) return;
             ContactNom = value.Nom;
             ContactPrenom = value.Prenom;
             ContactRegistreNational = value.RegistreNational ?? string.Empty;
@@ -229,6 +247,9 @@ public class MainViewModel : ObservableObject
         set
         {
             if (!SetProperty(ref _animalGestionSelectionne, value)) return;
+            OnPropertyChanged(nameof(PeutAjouterAnimal));
+            CommandManager.InvalidateRequerySuggested();
+            RemplirFormulaireAnimal(value);
             ChargerDetailsAnimal();
         }
     }
@@ -249,12 +270,14 @@ public class MainViewModel : ObservableObject
     private Animal? _animalAdoptionSelectionne;
     private PersonneContact? _contactAdoptionSelectionne;
     private DateTime? _dateDemandeAdoption;
+    private DateTime? _dateChangementStatutAdoption;
     private Adoption? _adoptionSelectionnee;
     private StatutAdoption _nouveauStatutAdoption;
 
     public Animal? AnimalAdoptionSelectionne { get => _animalAdoptionSelectionne; set => SetProperty(ref _animalAdoptionSelectionne, value); }
     public PersonneContact? ContactAdoptionSelectionne { get => _contactAdoptionSelectionne; set => SetProperty(ref _contactAdoptionSelectionne, value); }
     public DateTime? DateDemandeAdoption { get => _dateDemandeAdoption; set => SetProperty(ref _dateDemandeAdoption, value); }
+    public DateTime? DateChangementStatutAdoption { get => _dateChangementStatutAdoption; set => SetProperty(ref _dateChangementStatutAdoption, value); }
     public Adoption? AdoptionSelectionnee { get => _adoptionSelectionnee; set => SetProperty(ref _adoptionSelectionnee, value); }
     public StatutAdoption NouveauStatutAdoption { get => _nouveauStatutAdoption; set => SetProperty(ref _nouveauStatutAdoption, value); }
 
@@ -264,6 +287,8 @@ public class MainViewModel : ObservableObject
     private DateTime? _dateFinAccueil;
     private Animal? _animalAccueilListeSelectionne;
     private PersonneContact? _contactAccueilListeSelectionne;
+    private FamilleAccueil? _accueilSelectionne;
+    private DateTime? _dateFinModificationAccueil;
 
     public Animal? AnimalAccueilSelectionne { get => _animalAccueilSelectionne; set => SetProperty(ref _animalAccueilSelectionne, value); }
     public PersonneContact? ContactAccueilSelectionne { get => _contactAccueilSelectionne; set => SetProperty(ref _contactAccueilSelectionne, value); }
@@ -271,6 +296,17 @@ public class MainViewModel : ObservableObject
     public DateTime? DateFinAccueil { get => _dateFinAccueil; set => SetProperty(ref _dateFinAccueil, value); }
     public Animal? AnimalAccueilListeSelectionne { get => _animalAccueilListeSelectionne; set => SetProperty(ref _animalAccueilListeSelectionne, value); }
     public PersonneContact? ContactAccueilListeSelectionne { get => _contactAccueilListeSelectionne; set => SetProperty(ref _contactAccueilListeSelectionne, value); }
+    public FamilleAccueil? AccueilSelectionne
+    {
+        get => _accueilSelectionne;
+        set
+        {
+            if (!SetProperty(ref _accueilSelectionne, value)) return;
+            DateFinModificationAccueil = value?.DateFin;
+            CommandManager.InvalidateRequerySuggested();
+        }
+    }
+    public DateTime? DateFinModificationAccueil { get => _dateFinModificationAccueil; set => SetProperty(ref _dateFinModificationAccueil, value); }
 
     private string _nouveauVaccinNom = string.Empty;
     private Vaccin? _vaccinSelectionne;
@@ -297,6 +333,22 @@ public class MainViewModel : ObservableObject
             Recharger(MotifsSortie, _motifSortieDAO.ListerTous());
             Recharger(Adoptions, _adoptionDAO.ListerToutes());
             Recharger(Vaccins, _vaccinDAO.ListerTous());
+            RechargerListesAccueil();
+
+            if (AnimalAdoptionSelectionne != null && !AnimalExisteDans(AnimalAdoptionSelectionne, AnimauxPresents))
+                AnimalAdoptionSelectionne = null;
+            if (AnimalGestionSelectionne != null && !AnimalExisteDans(AnimalGestionSelectionne, AnimauxPresents))
+                AnimalGestionSelectionne = null;
+            if (AnimalSortieSelectionne != null && !AnimalExisteDans(AnimalSortieSelectionne, AnimauxPresents))
+                AnimalSortieSelectionne = null;
+            if (AnimalAccueilSelectionne != null && !AnimalExisteDans(AnimalAccueilSelectionne, AnimauxPresents))
+                AnimalAccueilSelectionne = null;
+            if (AnimalAccueilListeSelectionne != null && !AnimalExisteDans(AnimalAccueilListeSelectionne, AnimauxAvecAccueil))
+                AnimalAccueilListeSelectionne = null;
+            if (ContactAccueilListeSelectionne != null && !ContactsAvecAccueil.Any(c => c.IdContact == ContactAccueilListeSelectionne.IdContact))
+                ContactAccueilListeSelectionne = null;
+            if (AnimalVaccinationSelectionne != null && !AnimalExisteDans(AnimalVaccinationSelectionne, AnimauxPresents))
+                AnimalVaccinationSelectionne = null;
 
             MotifEntreeSelectionne ??= MotifsEntree.FirstOrDefault();
             ContactEntreeSelectionne ??= Contacts.FirstOrDefault();
@@ -307,9 +359,9 @@ public class MainViewModel : ObservableObject
             ContactSortieSelectionne ??= Contacts.FirstOrDefault();
             AnimalAccueilSelectionne ??= AnimauxPresents.FirstOrDefault();
             ContactAccueilSelectionne ??= Contacts.FirstOrDefault(c => c.ALeRole(TypeContact.FamilleAccueil)) ?? Contacts.FirstOrDefault();
-            AnimalAccueilListeSelectionne ??= TousLesAnimaux.FirstOrDefault();
-            ContactAccueilListeSelectionne ??= Contacts.FirstOrDefault();
-            AnimalVaccinationSelectionne ??= TousLesAnimaux.FirstOrDefault();
+            AnimalAccueilListeSelectionne ??= AnimauxAvecAccueil.FirstOrDefault();
+            ContactAccueilListeSelectionne ??= ContactsAvecAccueil.FirstOrDefault();
+            AnimalVaccinationSelectionne ??= AnimauxPresents.FirstOrDefault();
             VaccinVaccinationSelectionne ??= Vaccins.FirstOrDefault();
             SetInfo("Données chargées.");
         }, ErrorZone.Contact);
@@ -318,6 +370,14 @@ public class MainViewModel : ObservableObject
     private void AjouterContact()
     {
         EnregistrerContact(false);
+    }
+
+    private void PreparerNouveauContact()
+    {
+        ContactSelectionne = null;
+        ViderFormulaireContact();
+        ContactErrorMessage = string.Empty;
+        SetInfo("Formulaire prêt pour un nouveau contact.");
     }
 
     private void ModifierContact()
@@ -355,6 +415,17 @@ public class MainViewModel : ObservableObject
             RafraichirTout();
             SetInfo(resultat.Message);
         }, ErrorZone.Contact);
+    }
+
+    private void RechargerListesAccueil()
+    {
+        var idsAnimaux = _familleAccueilDAO.ListerIdsAnimauxAvecAccueil()
+            .Select(id => id.Trim())
+            .ToHashSet(StringComparer.Ordinal);
+        var idsContacts = _familleAccueilDAO.ListerIdsContactsAvecAccueil().ToHashSet();
+
+        Recharger(AnimauxAvecAccueil, TousLesAnimaux.Where(a => idsAnimaux.Contains(a.IdAnimal.Trim())));
+        Recharger(ContactsAvecAccueil, Contacts.Where(c => idsContacts.Contains(c.IdContact)));
     }
 
     private void SupprimerContact()
@@ -419,6 +490,96 @@ public class MainViewModel : ObservableObject
             RafraichirTout();
             SetInfo($"Animal créé : {animal.IdAnimal}.");
         }, ErrorZone.Animal);
+    }
+
+    private void PreparerNouvelAnimal()
+    {
+        AnimalGestionSelectionne = null;
+        ViderFormulaireAnimal();
+        CouleursAnimal.Clear();
+        CompatibilitesAnimal.Clear();
+        AnimalGestionErrorMessage = string.Empty;
+        AnimalErrorMessage = string.Empty;
+        SetInfo("Formulaire prêt pour un nouvel animal.");
+    }
+
+    private void ModifierAnimal()
+    {
+        ExecuterAvecGestionErreur(() =>
+        {
+            if (AnimalGestionSelectionne == null)
+            {
+                SetError("Choisissez un animal à modifier.", ErrorZone.Animal);
+                return;
+            }
+
+            var dateEntree = AnimalGestionSelectionne.DateEntree
+                ?? AnimalGestionSelectionne.DateEntreeRefuge()
+                ?? DateEntreeAnimal
+                ?? DateTime.Today;
+
+            var animal = ConstruireAnimalDepuisFormulaire(AnimalGestionSelectionne.IdAnimal, AnimalGestionSelectionne.DateDeces);
+            var validation = animal.VerifierCreation(dateEntree);
+            if (!validation.EstValide)
+            {
+                SetError(validation.PremierMessage, ErrorZone.Animal);
+                return;
+            }
+
+            bool modifie = _animalDAO.Modifier(animal);
+            if (!modifie)
+            {
+                SetError("Animal introuvable.", ErrorZone.Animal);
+                return;
+            }
+
+            RafraichirTout();
+            SetInfo("Animal modifié.");
+        }, ErrorZone.Animal);
+    }
+
+    private Animal ConstruireAnimalDepuisFormulaire(string idAnimal, DateTime? dateDeces)
+    {
+        var animal = new Animal
+        {
+            IdAnimal = idAnimal,
+            Nom = AnimalNom.Trim(),
+            Type = TypeAnimalSelectionne,
+            Sexe = SexeSelectionne,
+            DateNaissance = DateNaissanceAnimal,
+            Sterilise = AnimalSterilise,
+            DateSterilisation = AnimalSterilise ? DateSterilisationAnimal : null,
+            DateDeces = dateDeces,
+            Description = VideEnNull(AnimalDescription),
+            Particularites = VideEnNull(AnimalParticularites)
+        };
+
+        foreach (string couleur in AnimalCouleurs.Split(new[] { ',', ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!animal.AjouterCouleur(couleur, out string erreurCouleur))
+                throw new InvalidOperationException(erreurCouleur);
+        }
+
+        return animal;
+    }
+
+    private void RemplirFormulaireAnimal(Animal? animal)
+    {
+        if (animal == null) return;
+
+        AnimalNom = animal.Nom;
+        TypeAnimalSelectionne = animal.Type;
+        SexeSelectionne = animal.Sexe;
+        DateNaissanceAnimal = animal.DateNaissance;
+        AnimalSterilise = animal.Sterilise;
+        DateSterilisationAnimal = animal.DateSterilisation;
+        AnimalDescription = animal.Description ?? string.Empty;
+        AnimalParticularites = animal.Particularites ?? string.Empty;
+        AnimalCouleurs = string.Join(Environment.NewLine, animal.Couleurs);
+        DateEntreeAnimal = animal.DateEntree ?? animal.DateEntreeRefuge() ?? DateEntreeAnimal;
+
+        if (!string.IsNullOrWhiteSpace(animal.MotifEntree))
+            MotifEntreeSelectionne = MotifsEntree.FirstOrDefault(m => m.Libelle == animal.MotifEntree) ?? MotifEntreeSelectionne;
     }
 
     private void ChargerDetailsAnimal()
@@ -555,6 +716,13 @@ public class MainViewModel : ObservableObject
                 return;
             }
 
+            if ((MotifSortieSelectionne.Libelle == "adoption" || MotifSortieSelectionne.Libelle == "famille_accueil")
+                && ContactSortieSelectionne == null)
+            {
+                SetError("Choisissez une personne de contact pour cette sortie.", ErrorZone.AnimalGestion);
+                return;
+            }
+
             int id = _sortieDAO.Ajouter(new Sortie
             {
                 IdAnimal = AnimalSortieSelectionne.IdAnimal,
@@ -562,9 +730,42 @@ public class MainViewModel : ObservableObject
                 IdMotifSortie = MotifSortieSelectionne.IdMotifSortie,
                 IdContact = ContactSortieSelectionne?.IdContact
             });
+            CreerDossierAssocieALaSortie(AnimalSortieSelectionne, MotifSortieSelectionne, ContactSortieSelectionne, date);
             RafraichirTout();
             SetInfo($"Sortie enregistrée : id {id}.");
         }, ErrorZone.AnimalGestion);
+    }
+
+    private void CreerDossierAssocieALaSortie(Animal animal, MotifSortie motif, PersonneContact? contact, DateTime dateSortie)
+    {
+        if (motif.Libelle == "adoption" && contact != null && !_adoptionDAO.ADejaUneAdoptionAcceptee(animal.IdAnimal))
+        {
+            var adoptionExistante = _adoptionDAO.ListerToutes()
+                .FirstOrDefault(a => a.IdAnimal.Trim() == animal.IdAnimal.Trim() && a.IdContact == contact.IdContact);
+            if (adoptionExistante != null)
+            {
+                _adoptionDAO.ModifierStatut(adoptionExistante.IdAdoption, StatutAdoption.Acceptee);
+                return;
+            }
+
+            _adoptionDAO.Ajouter(new Adoption
+            {
+                IdAnimal = animal.IdAnimal,
+                IdContact = contact.IdContact,
+                DateDemande = dateSortie,
+                Statut = StatutAdoption.Acceptee
+            });
+        }
+
+        if (motif.Libelle == "famille_accueil" && contact != null && !_familleAccueilDAO.ADejaUnAccueilEnCours(animal.IdAnimal))
+        {
+            _familleAccueilDAO.Ajouter(new FamilleAccueil
+            {
+                IdAnimal = animal.IdAnimal,
+                IdContact = contact.IdContact,
+                DateDebut = dateSortie
+            });
+        }
     }
 
     private void SupprimerAnimal()
@@ -603,7 +804,10 @@ public class MainViewModel : ObservableObject
     {
         ExecuterAvecGestionErreur(() =>
         {
-            var resultat = _adoptionService.ModifierStatut(AdoptionSelectionnee, NouveauStatutAdoption);
+            var resultat = _adoptionService.ModifierStatut(
+                AdoptionSelectionnee,
+                NouveauStatutAdoption,
+                DateChangementStatutAdoption);
             if (!resultat.Succes)
             {
                 SetError(resultat.Message, ErrorZone.Adoption);
@@ -619,6 +823,9 @@ public class MainViewModel : ObservableObject
     {
         ExecuterAvecGestionErreur(() =>
         {
+            string? idAnimalAccueil = AnimalAccueilSelectionne?.IdAnimal;
+            int? idContactAccueil = ContactAccueilSelectionne?.IdContact;
+
             var resultat = _accueilService.Ajouter(
                 AnimalAccueilSelectionne,
                 ContactAccueilSelectionne,
@@ -630,6 +837,28 @@ public class MainViewModel : ObservableObject
                 return;
             }
 
+            RafraichirTout();
+            if (!string.IsNullOrWhiteSpace(idAnimalAccueil))
+                AnimalAccueilListeSelectionne = AnimauxAvecAccueil.FirstOrDefault(a => a.IdAnimal.Trim() == idAnimalAccueil.Trim());
+            if (idContactAccueil.HasValue)
+                ContactAccueilListeSelectionne = ContactsAvecAccueil.FirstOrDefault(c => c.IdContact == idContactAccueil.Value);
+            ChargerAccueils();
+            SetInfo(resultat.Message);
+        }, ErrorZone.Accueil);
+    }
+
+    private void ModifierAccueil()
+    {
+        ExecuterAvecGestionErreur(() =>
+        {
+            var resultat = _accueilService.ModifierDateFin(AccueilSelectionne, DateFinModificationAccueil);
+            if (!resultat.Succes)
+            {
+                SetError(resultat.Message, ErrorZone.Accueil);
+                return;
+            }
+
+            RafraichirTout();
             ChargerAccueils();
             SetInfo(resultat.Message);
         }, ErrorZone.Accueil);
@@ -682,29 +911,20 @@ public class MainViewModel : ObservableObject
     {
         ExecuterAvecGestionErreur(() =>
         {
-            if (AnimalVaccinationSelectionne == null || VaccinVaccinationSelectionne == null)
+            var resultat = _vaccinationService.AjouterOuMarquerFaite(
+                AnimalVaccinationSelectionne,
+                VaccinVaccinationSelectionne,
+                DateVaccination,
+                VaccinationFaite);
+
+            if (!resultat.Succes)
             {
-                SetError("Choisissez un animal et un vaccin.", ErrorZone.Vaccination);
+                SetError(resultat.Message, ErrorZone.Vaccination);
                 return;
             }
 
-            DateTime date = DateVaccination ?? DateTime.Today;
-            if (AnimalVaccinationSelectionne.DateNaissance.HasValue &&
-                date.Date < AnimalVaccinationSelectionne.DateNaissance.Value.Date)
-            {
-                SetError("La date du vaccin est antérieure à la date de naissance de l'animal.", ErrorZone.Vaccination);
-                return;
-            }
-
-            int id = _vaccinationDAO.Ajouter(new Vaccination
-            {
-                IdAnimal = AnimalVaccinationSelectionne.IdAnimal,
-                IdVaccin = VaccinVaccinationSelectionne.IdVaccin,
-                DateVaccin = date,
-                Fait = VaccinationFaite
-            });
             ChargerVaccinationsAnimal();
-            SetInfo($"Vaccination enregistrée : id {id}.");
+            SetInfo(resultat.Message);
         }, ErrorZone.Vaccination);
     }
 
@@ -759,6 +979,11 @@ public class MainViewModel : ObservableObject
         AnimalDescription = string.Empty;
         AnimalParticularites = string.Empty;
         AnimalCouleurs = string.Empty;
+    }
+
+    private static bool AnimalExisteDans(Animal animal, IEnumerable<Animal> animaux)
+    {
+        return animaux.Any(a => a.IdAnimal.Trim() == animal.IdAnimal.Trim());
     }
 
     private void SetInfo(string message)

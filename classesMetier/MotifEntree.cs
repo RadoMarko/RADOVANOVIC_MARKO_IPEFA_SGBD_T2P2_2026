@@ -10,6 +10,7 @@ public class MotifEntree
 {
     public int IdMotifEntree { get; set; }                  // clé primaire
     public string Libelle { get; set; } = string.Empty;     // texte affiché (ex. "Abandon")
+    public string LibelleAffichage => EnumsConversion.MotifEntreeAffichage(Libelle);
 
-    public override string ToString() => $"[{IdMotifEntree}] {Libelle}";
+    public override string ToString() => $"[{IdMotifEntree}] {LibelleAffichage}";
 }

@@ -37,6 +37,38 @@ public class FamilleAccueilDAO
         return Convert.ToBoolean(cmd.ExecuteScalar());
     }
 
+    public bool ModifierDateFin(int idAccueil, DateTime dateFin)
+    {
+        const string sql = "SELECT * FROM modifierDateFinAccueil(@p_id, @p_dateFin)";
+        using var conn = ConnexionBD.Ouvrir();
+        using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("p_id", idAccueil);
+        ParametresBD.AjouterDate(cmd, "p_dateFin", dateFin);
+        return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+    }
+
+    public List<string> ListerIdsAnimauxAvecAccueil()
+    {
+        const string sql = "SELECT * FROM listerIdsAnimauxAvecAccueil()";
+        var liste = new List<string>();
+        using var conn = ConnexionBD.Ouvrir();
+        using var cmd = new NpgsqlCommand(sql, conn);
+        using var rd = cmd.ExecuteReader();
+        while (rd.Read()) liste.Add(rd.GetString(0));
+        return liste;
+    }
+
+    public List<int> ListerIdsContactsAvecAccueil()
+    {
+        const string sql = "SELECT * FROM listerIdsContactsAvecAccueil()";
+        var liste = new List<int>();
+        using var conn = ConnexionBD.Ouvrir();
+        using var cmd = new NpgsqlCommand(sql, conn);
+        using var rd = cmd.ExecuteReader();
+        while (rd.Read()) liste.Add(rd.GetInt32(0));
+        return liste;
+    }
+
     public List<FamilleAccueil> ListerParAnimal(string idAnimal)
     {
         const string sql = "SELECT * FROM listerAccueilsParAnimal(@p_id)";

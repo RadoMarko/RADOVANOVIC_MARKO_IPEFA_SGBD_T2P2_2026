@@ -18,7 +18,7 @@ public class Adoption
     public string? PrenomContact { get; set; }
 
     public bool EstAcceptee => Statut == StatutAdoption.Acceptee;
-    public string StatutTexte => Statut.ToDb();
+    public string StatutTexte => Statut.ToDisplay();
     public string ContactTexte => (PrenomContact != null || NomContact != null)
         ? $"{PrenomContact} {NomContact}".Trim()
         : $"contact #{IdContact}";
@@ -34,14 +34,14 @@ public class Adoption
         };
     }
 
-    public Sortie CreerSortieAdoption(MotifSortie motifAdoption)
+    public Sortie CreerSortieAdoption(MotifSortie motifAdoption, DateTime dateSortie)
     {
         if (motifAdoption.Libelle != "adoption")
             throw new InvalidOperationException("Le motif fourni n'est pas le motif de sortie 'adoption'.");
 
         return new Sortie
         {
-            DateSortie = DateTime.Today,
+            DateSortie = dateSortie.Date,
             IdAnimal = IdAnimal,
             IdMotifSortie = motifAdoption.IdMotifSortie,
             IdContact = IdContact

@@ -1,7 +1,7 @@
 -- =============================================================
 -- Projet : Gestion d'un refuge d'animaux
 -- Auteur : Marko Radovanovic
--- Travail 2 - partie 1 : creation des tables PostgreSQL
+-- Travail 2 - partie 2
 -- =============================================================
 
 DROP TABLE IF EXISTS VACCINATION CASCADE;

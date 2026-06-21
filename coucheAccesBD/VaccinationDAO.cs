@@ -21,6 +21,50 @@ public class VaccinationDAO
         return Convert.ToInt32(cmd.ExecuteScalar());
     }
 
+    public bool Existe(string idAnimal, int idVaccin, DateTime dateVaccin)
+    {
+        const string sql = "SELECT * FROM vaccinationExiste(@p_date, @p_animal, @p_vaccin)";
+        using var conn = ConnexionBD.Ouvrir();
+        using var cmd = new NpgsqlCommand(sql, conn);
+        ParametresBD.AjouterDate(cmd, "p_date", dateVaccin);
+        ParametresBD.AjouterText(cmd, "p_animal", idAnimal);
+        cmd.Parameters.AddWithValue("p_vaccin", idVaccin);
+        return Convert.ToBoolean(cmd.ExecuteScalar());
+    }
+
+    public Vaccination? Consulter(string idAnimal, int idVaccin, DateTime dateVaccin)
+    {
+        const string sql = "SELECT * FROM consulterVaccination(@p_date, @p_animal, @p_vaccin)";
+        using var conn = ConnexionBD.Ouvrir();
+        using var cmd = new NpgsqlCommand(sql, conn);
+        ParametresBD.AjouterDate(cmd, "p_date", dateVaccin);
+        ParametresBD.AjouterText(cmd, "p_animal", idAnimal);
+        cmd.Parameters.AddWithValue("p_vaccin", idVaccin);
+
+        using var rd = cmd.ExecuteReader();
+        if (!rd.Read())
+            return null;
+
+        return new Vaccination
+        {
+            IdVaccination = rd.GetInt32(0),
+            Fait = rd.GetBoolean(1),
+            DateVaccin = dateVaccin,
+            IdAnimal = idAnimal,
+            IdVaccin = idVaccin
+        };
+    }
+
+    public bool ModifierEtat(int idVaccination, bool fait)
+    {
+        const string sql = "SELECT * FROM modifierEtatVaccination(@p_id, @p_fait)";
+        using var conn = ConnexionBD.Ouvrir();
+        using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("p_id", idVaccination);
+        cmd.Parameters.AddWithValue("p_fait", fait);
+        return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+    }
+
     public List<Vaccination> ListerParAnimal(string idAnimal)
     {
         const string sql = "SELECT * FROM listerVaccinationsParAnimal(@p_id)";

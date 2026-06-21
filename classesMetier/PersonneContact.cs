@@ -44,7 +44,7 @@ public class PersonneContact
     {
         return Roles.Count == 0
             ? "(aucun)"
-            : string.Join(", ", Roles.Select(r => r.ToDb()));
+            : string.Join(", ", Roles.Select(r => r.ToDisplay()));
     }
 
     public string AdresseTexte()

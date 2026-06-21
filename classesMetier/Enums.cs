@@ -73,6 +73,87 @@ public enum StatutAdoption
 // "static" : on appelle ces méthodes sans créer d'objet (EnumsConversion.ToTypeAnimal(...)).
 public static class EnumsConversion
 {
+    // -------- Affichage utilisateur --------
+    public static string ToDisplay(this TypeAnimal v) => v switch
+    {
+        TypeAnimal.Chat => "Chat",
+        TypeAnimal.Chien => "Chien",
+        _ => v.ToString()
+    };
+
+    public static string ToDisplay(this Sexe v) => v switch
+    {
+        Sexe.M => "Mâle",
+        Sexe.F => "Femelle",
+        _ => v.ToString()
+    };
+
+    public static string ToDisplay(this TypeContact v) => v switch
+    {
+        TypeContact.Benevole => "Bénévole",
+        TypeContact.Adoptant => "Adoptant",
+        TypeContact.Candidat => "Candidat",
+        TypeContact.FamilleAccueil => "Famille d'accueil",
+        _ => v.ToString()
+    };
+
+    public static string ToDisplay(this TypeCompatibilite v) => v switch
+    {
+        TypeCompatibilite.Chat => "Chat",
+        TypeCompatibilite.Chien => "Chien",
+        TypeCompatibilite.JeuneEnfant => "Jeune enfant",
+        TypeCompatibilite.Enfant => "Enfant",
+        TypeCompatibilite.Jardin => "Jardin",
+        TypeCompatibilite.Poney => "Poney",
+        _ => v.ToString()
+    };
+
+    public static string ToDisplay(this ValeurCompatibilite v) => v switch
+    {
+        ValeurCompatibilite.Oui => "Oui",
+        ValeurCompatibilite.Non => "Non",
+        _ => v.ToString()
+    };
+
+    public static string ToDisplay(this StatutAdoption v) => v switch
+    {
+        StatutAdoption.Demande => "Demande",
+        StatutAdoption.Acceptee => "Acceptée",
+        StatutAdoption.RejetEnvironnement => "Rejet environnement",
+        StatutAdoption.RejetComportement => "Rejet comportement",
+        _ => v.ToString()
+    };
+
+    public static string MotifEntreeAffichage(string? libelle) => AfficherMotif(libelle, new Dictionary<string, string>
+    {
+        ["abandon"] = "Abandon",
+        ["errant"] = "Errant",
+        ["deces_proprietaire"] = "Décès propriétaire",
+        ["saisie"] = "Saisie",
+        ["retour_adoption"] = "Retour adoption",
+        ["retour_famille_accueil"] = "Retour famille d'accueil"
+    });
+
+    public static string MotifSortieAffichage(string? libelle) => AfficherMotif(libelle, new Dictionary<string, string>
+    {
+        ["adoption"] = "Adoption",
+        ["retour_proprietaire"] = "Retour propriétaire",
+        ["deces_animal"] = "Décès animal",
+        ["famille_accueil"] = "Famille d'accueil"
+    });
+
+    private static string AfficherMotif(string? libelle, Dictionary<string, string> libelles)
+    {
+        if (string.IsNullOrWhiteSpace(libelle))
+            return string.Empty;
+
+        string cle = libelle.Trim().ToLower();
+        if (libelles.TryGetValue(cle, out var affichage))
+            return affichage;
+
+        return char.ToUpper(cle[0]) + cle[1..].Replace('_', ' ');
+    }
+
     // -------- TypeAnimal --------
 
     // "this TypeAnimal v" => méthode d'extension : on pourra écrire monType.ToDb().

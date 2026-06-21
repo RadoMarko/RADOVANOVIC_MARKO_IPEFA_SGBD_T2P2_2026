@@ -9,7 +9,7 @@ public class Vaccination
     public int IdVaccin { get; set; }
     public string? NomVaccin { get; set; }
 
-    public string FaitTexte => Fait ? "fait" : "prévu";
+    public string FaitTexte => Fait ? "Fait" : "Prévu";
 
     public override string ToString()
     {

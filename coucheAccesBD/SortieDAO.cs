@@ -16,4 +16,14 @@ public class SortieDAO
         cmd.Parameters.AddWithValue("p_contact", (object?)s.IdContact ?? DBNull.Value);
         return Convert.ToInt32(cmd.ExecuteScalar());
     }
+
+    public bool SupprimerDerniereSortie(string idAnimal, string raison)
+    {
+        const string sql = "SELECT * FROM supprimerDerniereSortie(@p_animal, @p_raison)";
+        using var conn = ConnexionBD.Ouvrir();
+        using var cmd = new NpgsqlCommand(sql, conn);
+        ParametresBD.AjouterText(cmd, "p_animal", idAnimal);
+        ParametresBD.AjouterVarchar(cmd, "p_raison", raison);
+        return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+    }
 }
