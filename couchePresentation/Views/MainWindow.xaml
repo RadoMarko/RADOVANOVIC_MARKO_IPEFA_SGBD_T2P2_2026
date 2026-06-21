@@ -1,0 +1,359 @@
+<Window x:Class="RefugeAnimaux.couchePresentation.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Refuge d'animaux" Height="760" Width="1180"
+        WindowStartupLocation="CenterScreen"
+        Style="{StaticResource MainWindowStyle}">
+    <DockPanel Margin="14">
+        <Border DockPanel.Dock="Bottom" Padding="10" Background="#EEF6FF" BorderBrush="#D5E2EE" BorderThickness="1" CornerRadius="6" Margin="0,10,0,0">
+            <DockPanel>
+                <Button DockPanel.Dock="Left"
+                        Content="Rafraîchir"
+                        Command="{Binding RafraichirCommand}"
+                        Width="180"
+                        Margin="0,0,12,0"
+                        ToolTip="Recharge les données depuis la base"/>
+                <TextBlock Text="{Binding StatusMessage}"
+                           Foreground="{Binding StatusBrush}"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           TextWrapping="Wrap"/>
+            </DockPanel>
+        </Border>
+
+        <TabControl Background="Transparent">
+            <TabItem Header="Personnes de contact">
+                <Grid Margin="8" Background="White">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="360"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Background="#FFFFFF">
+                        <StackPanel>
+                            <TextBlock Text="Ajouter une personne" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <Label Content="Nom"/>
+                            <TextBox Text="{Binding ContactNom, UpdateSourceTrigger=PropertyChanged}"/>
+                            <Label Content="Prénom"/>
+                            <TextBox Text="{Binding ContactPrenom, UpdateSourceTrigger=PropertyChanged}"/>
+                            <Label Content="Registre national (yy.mm.dd-999.99)"/>
+                            <TextBox Text="{Binding ContactRegistreNational, UpdateSourceTrigger=PropertyChanged}"/>
+                            <Label Content="Rue"/>
+                            <TextBox Text="{Binding ContactRue, UpdateSourceTrigger=PropertyChanged}"/>
+                            <Label Content="Code postal"/>
+                            <TextBox Text="{Binding ContactCp, UpdateSourceTrigger=PropertyChanged}"/>
+                            <Label Content="Localité"/>
+                            <TextBox Text="{Binding ContactLocalite, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <TextBlock Text="Au moins un moyen de contact est obligatoire : GSM, téléphone ou email."
+                                       TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,8,8,8"/>
+                            <Label Content="GSM"/>
+                            <TextBox Text="{Binding ContactGsm, UpdateSourceTrigger=PropertyChanged}"/>
+                            <Label Content="Téléphone"/>
+                            <TextBox Text="{Binding ContactTelephone, UpdateSourceTrigger=PropertyChanged}"/>
+                            <Label Content="Email"/>
+                            <TextBox Text="{Binding ContactEmail, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <TextBlock Text="Rôles" FontWeight="SemiBold" Margin="0,8,0,4"/>
+                            <CheckBox Content="Bénévole" IsChecked="{Binding RoleBenevole}"/>
+                            <CheckBox Content="Adoptant" IsChecked="{Binding RoleAdoptant}"/>
+                            <CheckBox Content="Candidat" IsChecked="{Binding RoleCandidat}"/>
+                            <CheckBox Content="Famille d'accueil" IsChecked="{Binding RoleFamilleAccueil}"/>
+
+                            <TextBlock Text="{Binding ContactErrorMessage}" Style="{StaticResource ErrorTextStyle}"/>
+
+                            <Button Content="Ajouter le contact" Command="{Binding AjouterContactCommand}" Margin="0,12,8,0"/>
+                            <Button Content="Modifier le contact sélectionné" Command="{Binding ModifierContactCommand}"/>
+                            <Button Content="Supprimer le contact sélectionné" Command="{Binding SupprimerContactCommand}"/>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <DataGrid Grid.Column="1" ItemsSource="{Binding Contacts}" SelectedItem="{Binding ContactSelectionne}" Margin="14,0,0,0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Id" Binding="{Binding IdContact}" Width="55"/>
+                            <DataGridTextColumn Header="Prénom" Binding="{Binding Prenom}" Width="120"/>
+                            <DataGridTextColumn Header="Nom" Binding="{Binding Nom}" Width="120"/>
+                            <DataGridTextColumn Header="Rôles" Binding="{Binding RolesAffichage}" Width="190"/>
+                            <DataGridTextColumn Header="GSM" Binding="{Binding GSM}" Width="110"/>
+                            <DataGridTextColumn Header="Téléphone" Binding="{Binding Telephone}" Width="120"/>
+                            <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Animaux">
+                <Grid Margin="8" Background="White">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="380"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Background="#FFFFFF">
+                        <StackPanel>
+                            <TextBlock Text="Ajouter un animal" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <Label Content="Date d'entrée"/>
+                            <DatePicker SelectedDate="{Binding DateEntreeAnimal}"/>
+                            <Label Content="Nom"/>
+                            <TextBox Text="{Binding AnimalNom, UpdateSourceTrigger=PropertyChanged}"/>
+                            <Label Content="Type"/>
+                            <ComboBox ItemsSource="{Binding TypesAnimal}" SelectedItem="{Binding TypeAnimalSelectionne}"/>
+                            <Label Content="Sexe"/>
+                            <ComboBox ItemsSource="{Binding Sexes}" SelectedItem="{Binding SexeSelectionne}"/>
+                            <Label Content="Date de naissance"/>
+                            <DatePicker SelectedDate="{Binding DateNaissanceAnimal}"/>
+                            <CheckBox Content="Animal stérilisé" IsChecked="{Binding AnimalSterilise}" Margin="0,8,0,8"/>
+                            <Label Content="Date de stérilisation"/>
+                            <DatePicker SelectedDate="{Binding DateSterilisationAnimal}" IsEnabled="{Binding AnimalSterilise}"/>
+                            <Label Content="Description"/>
+                            <TextBox Text="{Binding AnimalDescription, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="55"/>
+                            <Label Content="Particularités"/>
+                            <TextBox Text="{Binding AnimalParticularites, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="55"/>
+                            <Label Content="Couleurs (séparées par virgule ou retour ligne)"/>
+                            <TextBox Text="{Binding AnimalCouleurs, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="65"/>
+                            <Label Content="Motif d'entrée"/>
+                            <ComboBox ItemsSource="{Binding MotifsEntree}" SelectedItem="{Binding MotifEntreeSelectionne}" DisplayMemberPath="Libelle"/>
+                            <Label Content="Contact d'entrée"/>
+                            <ComboBox ItemsSource="{Binding Contacts}" SelectedItem="{Binding ContactEntreeSelectionne}" DisplayMemberPath="NomComplet"/>
+                            <TextBlock Text="{Binding AnimalErrorMessage}" Style="{StaticResource ErrorTextStyle}"/>
+
+                            <Button Content="Ajouter l'animal" Command="{Binding AjouterAnimalCommand}" Margin="0,12,8,0"/>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <TabControl Grid.Column="1" Margin="14,0,0,0" Background="#FFFFFF">
+                        <TabItem Header="Présents au refuge">
+                            <DataGrid ItemsSource="{Binding AnimauxPresents}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Id" Binding="{Binding IdAnimal}" Width="115"/>
+                                    <DataGridTextColumn Header="Nom" Binding="{Binding Nom}" Width="140"/>
+                                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="80"/>
+                                    <DataGridTextColumn Header="Sexe" Binding="{Binding Sexe}" Width="60"/>
+                                    <DataGridTextColumn Header="Couleurs" Binding="{Binding CouleursTexte}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                        <TabItem Header="Historique complet">
+                            <DataGrid ItemsSource="{Binding TousLesAnimaux}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Id" Binding="{Binding IdAnimal}" Width="115"/>
+                                    <DataGridTextColumn Header="Nom" Binding="{Binding Nom}" Width="140"/>
+                                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="80"/>
+                                    <DataGridTextColumn Header="Sexe" Binding="{Binding Sexe}" Width="60"/>
+                                    <DataGridTextColumn Header="Naissance" Binding="{Binding DateNaissance, StringFormat=dd/MM/yyyy}" Width="110"/>
+                                    <DataGridTextColumn Header="Décès" Binding="{Binding DateDeces, StringFormat=dd/MM/yyyy}" Width="110"/>
+                                    <DataGridTextColumn Header="Couleurs" Binding="{Binding CouleursTexte}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                        <TabItem Header="Gestion animal">
+                            <Grid Margin="8" Background="White">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="330"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Background="#FFFFFF">
+                                    <StackPanel>
+                                        <TextBlock Text="Animal à gérer" FontSize="16" FontWeight="Bold"/>
+                                        <ComboBox ItemsSource="{Binding TousLesAnimaux}" SelectedItem="{Binding AnimalGestionSelectionne}" DisplayMemberPath="Nom"/>
+                                        <Button Content="Charger les détails" Command="{Binding ChargerDetailsAnimalCommand}"/>
+
+                                        <Label Content="Description"/>
+                                        <TextBox Text="{Binding NouvelleDescriptionAnimal, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="60"/>
+                                        <Label Content="Particularités"/>
+                                        <TextBox Text="{Binding NouvellesParticularitesAnimal, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="60"/>
+                                        <TextBlock Text="{Binding AnimalGestionErrorMessage}" Style="{StaticResource ErrorTextStyle}"/>
+                                        <Button Content="Modifier description / particularités" Command="{Binding ModifierInfosAnimalCommand}"/>
+                                        <Button Content="Effacer la description" Command="{Binding EffacerDescriptionCommand}"/>
+                                        <Button Content="Effacer les particularités" Command="{Binding EffacerParticularitesCommand}"/>
+
+                                        <TextBlock Text="Couleurs" FontWeight="SemiBold" Margin="0,12,0,4"/>
+                                        <TextBox Text="{Binding NouvelleCouleurAnimal, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <Button Content="Ajouter la couleur" Command="{Binding AjouterCouleurAnimalCommand}"/>
+                                        <ComboBox ItemsSource="{Binding CouleursAnimal}" SelectedItem="{Binding CouleurAnimalSelectionnee}"/>
+                                        <Button Content="Supprimer la couleur sélectionnée" Command="{Binding SupprimerCouleurAnimalCommand}"/>
+
+                                        <TextBlock Text="Sortie du refuge" FontWeight="SemiBold" Margin="0,12,0,4"/>
+                                        <ComboBox ItemsSource="{Binding AnimauxPresents}" SelectedItem="{Binding AnimalSortieSelectionne}" DisplayMemberPath="Nom"/>
+                                        <DatePicker SelectedDate="{Binding DateSortieAnimal}"/>
+                                        <ComboBox ItemsSource="{Binding MotifsSortie}" SelectedItem="{Binding MotifSortieSelectionne}" DisplayMemberPath="Libelle"/>
+                                        <ComboBox ItemsSource="{Binding Contacts}" SelectedItem="{Binding ContactSortieSelectionne}" DisplayMemberPath="NomComplet"/>
+                                        <Button Content="Enregistrer la sortie" Command="{Binding EnregistrerSortieCommand}"/>
+                                        <Button Content="Supprimer l'animal sélectionné" Command="{Binding SupprimerAnimalCommand}"/>
+                                    </StackPanel>
+                                </ScrollViewer>
+
+                                <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                                    <TextBlock Text="Compatibilités" FontSize="16" FontWeight="Bold"/>
+                                    <WrapPanel>
+                                        <ComboBox Width="160" ItemsSource="{Binding TypesCompatibilite}" SelectedItem="{Binding TypeCompatibiliteSelectionne}"/>
+                                        <ComboBox Width="120" ItemsSource="{Binding ValeursCompatibilite}" SelectedItem="{Binding ValeurCompatibiliteSelectionnee}"/>
+                                        <TextBox Width="260" Text="{Binding DescriptionCompatibilite, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <Button Content="Ajouter" Command="{Binding AjouterCompatibiliteCommand}"/>
+                                    </WrapPanel>
+                                    <DataGrid ItemsSource="{Binding CompatibilitesAnimal}" SelectedItem="{Binding CompatibiliteSelectionnee}">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Id" Binding="{Binding IdCompat}" Width="60"/>
+                                            <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="130"/>
+                                            <DataGridTextColumn Header="Valeur" Binding="{Binding Valeur}" Width="100"/>
+                                            <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                    <Button Content="Supprimer la compatibilité sélectionnée" Command="{Binding SupprimerCompatibiliteCommand}" HorizontalAlignment="Left"/>
+                                </StackPanel>
+                            </Grid>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Adoptions">
+                <Grid Margin="8" Background="White">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="360"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Background="#FFFFFF" Margin="4">
+                        <TextBlock Text="Nouvelle demande" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <Label Content="Animal présent au refuge"/>
+                        <ComboBox ItemsSource="{Binding AnimauxPresents}" SelectedItem="{Binding AnimalAdoptionSelectionne}" DisplayMemberPath="Nom"/>
+                        <Label Content="Contact candidat"/>
+                        <ComboBox ItemsSource="{Binding Contacts}" SelectedItem="{Binding ContactAdoptionSelectionne}" DisplayMemberPath="NomComplet"/>
+                        <Label Content="Date de demande"/>
+                        <DatePicker SelectedDate="{Binding DateDemandeAdoption}"/>
+                        <TextBlock Text="{Binding AdoptionErrorMessage}" Style="{StaticResource ErrorTextStyle}"/>
+                        <Button Content="Créer la demande" Command="{Binding AjouterAdoptionCommand}" Margin="0,12,8,20"/>
+
+                        <TextBlock Text="Modifier un statut" FontSize="18" FontWeight="Bold" Margin="0,12,0,10"/>
+                        <Label Content="Nouveau statut"/>
+                        <ComboBox ItemsSource="{Binding StatutsAdoption}" SelectedItem="{Binding NouveauStatutAdoption}"/>
+                        <Button Content="Appliquer au dossier sélectionné" Command="{Binding ModifierStatutAdoptionCommand}" Margin="0,12,8,0"/>
+                        <TextBlock Text="Quand le statut passe à acceptee, une sortie du refuge avec motif adoption est créée automatiquement."
+                                   TextWrapping="Wrap" Margin="0,12,8,0"/>
+                    </StackPanel>
+
+                    <DataGrid Grid.Column="1" ItemsSource="{Binding Adoptions}" SelectedItem="{Binding AdoptionSelectionnee}" Margin="14,0,0,0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Id" Binding="{Binding IdAdoption}" Width="55"/>
+                            <DataGridTextColumn Header="Animal" Binding="{Binding NomAnimal}" Width="140"/>
+                            <DataGridTextColumn Header="Id animal" Binding="{Binding IdAnimal}" Width="115"/>
+                            <DataGridTextColumn Header="Contact" Binding="{Binding ContactTexte}" Width="190"/>
+                            <DataGridTextColumn Header="Date demande" Binding="{Binding DateDemande, StringFormat=dd/MM/yyyy}" Width="120"/>
+                            <DataGridTextColumn Header="Statut" Binding="{Binding StatutTexte}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Familles d'accueil">
+                <Grid Margin="8" Background="White">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="360"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Background="#FFFFFF" Margin="4">
+                        <TextBlock Text="Ajouter un accueil" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <Label Content="Animal présent au refuge"/>
+                        <ComboBox ItemsSource="{Binding AnimauxPresents}" SelectedItem="{Binding AnimalAccueilSelectionne}" DisplayMemberPath="Nom"/>
+                        <Label Content="Famille d'accueil"/>
+                        <ComboBox ItemsSource="{Binding Contacts}" SelectedItem="{Binding ContactAccueilSelectionne}" DisplayMemberPath="NomComplet"/>
+                        <Label Content="Date de début"/>
+                        <DatePicker SelectedDate="{Binding DateDebutAccueil}"/>
+                        <Label Content="Date de fin (vide si en cours)"/>
+                        <DatePicker SelectedDate="{Binding DateFinAccueil}"/>
+                        <TextBlock Text="{Binding AccueilErrorMessage}" Style="{StaticResource ErrorTextStyle}"/>
+
+                        <Button Content="Ajouter l'accueil" Command="{Binding AjouterAccueilCommand}" Margin="0,12,8,20"/>
+
+                        <TextBlock Text="Listes" FontSize="18" FontWeight="Bold" Margin="0,12,0,10"/>
+                        <Label Content="Accueils d'un animal"/>
+                        <ComboBox ItemsSource="{Binding TousLesAnimaux}" SelectedItem="{Binding AnimalAccueilListeSelectionne}" DisplayMemberPath="Nom"/>
+                        <Label Content="Animaux accueillis par une famille"/>
+                        <ComboBox ItemsSource="{Binding Contacts}" SelectedItem="{Binding ContactAccueilListeSelectionne}" DisplayMemberPath="NomComplet"/>
+                        <Button Content="Charger les listes" Command="{Binding ChargerAccueilsCommand}" Margin="0,12,8,0"/>
+                    </StackPanel>
+
+                    <TabControl Grid.Column="1" Margin="14,0,0,0" Background="#FFFFFF">
+                        <TabItem Header="Par animal">
+                            <DataGrid ItemsSource="{Binding AccueilsParAnimal}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Id" Binding="{Binding IdAccueil}" Width="60"/>
+                                    <DataGridTextColumn Header="Période" Binding="{Binding PeriodeTexte}" Width="180"/>
+                                    <DataGridTextColumn Header="Id animal" Binding="{Binding IdAnimal}" Width="120"/>
+                                    <DataGridTextColumn Header="Famille" Binding="{Binding ContactTexte}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                        <TabItem Header="Par famille">
+                            <DataGrid ItemsSource="{Binding AccueilsParFamille}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Id" Binding="{Binding IdAccueil}" Width="60"/>
+                                    <DataGridTextColumn Header="Période" Binding="{Binding PeriodeTexte}" Width="180"/>
+                                    <DataGridTextColumn Header="Id animal" Binding="{Binding IdAnimal}" Width="120"/>
+                                    <DataGridTextColumn Header="Animal" Binding="{Binding NomAnimal}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Vaccins / vaccinations">
+                <Grid Margin="8" Background="White">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="360"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Background="#FFFFFF" Margin="4">
+                        <TextBlock Text="Catalogue des vaccins" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <Label Content="Nom du vaccin"/>
+                        <TextBox Text="{Binding NouveauVaccinNom, UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Text="{Binding VaccinErrorMessage}" Style="{StaticResource ErrorTextStyle}"/>
+
+                        <Button Content="Ajouter le vaccin" Command="{Binding AjouterVaccinCommand}"/>
+                        <Button Content="Supprimer le vaccin sélectionné" Command="{Binding SupprimerVaccinCommand}"/>
+
+                        <TextBlock Text="Vaccination d'un animal" FontSize="18" FontWeight="Bold" Margin="0,18,0,10"/>
+                        <Label Content="Animal"/>
+                        <ComboBox ItemsSource="{Binding TousLesAnimaux}" SelectedItem="{Binding AnimalVaccinationSelectionne}" DisplayMemberPath="Nom"/>
+                        <Label Content="Vaccin"/>
+                        <ComboBox ItemsSource="{Binding Vaccins}" SelectedItem="{Binding VaccinVaccinationSelectionne}" DisplayMemberPath="NomVaccin"/>
+                        <Label Content="Date"/>
+                        <DatePicker SelectedDate="{Binding DateVaccination}"/>
+                        <CheckBox Content="Vaccin effectué" IsChecked="{Binding VaccinationFaite}" Margin="0,8,0,8"/>
+                        <TextBlock Text="{Binding VaccinationErrorMessage}" Style="{StaticResource ErrorTextStyle}"/>
+
+                        <Button Content="Ajouter la vaccination" Command="{Binding AjouterVaccinationCommand}"/>
+                        <Button Content="Charger les vaccinations de l'animal" Command="{Binding ChargerVaccinationsCommand}"/>
+                    </StackPanel>
+
+                    <TabControl Grid.Column="1" Margin="14,0,0,0" Background="#FFFFFF">
+                        <TabItem Header="Vaccins">
+                            <DataGrid ItemsSource="{Binding Vaccins}" SelectedItem="{Binding VaccinSelectionne}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Id" Binding="{Binding IdVaccin}" Width="70"/>
+                                    <DataGridTextColumn Header="Nom" Binding="{Binding NomVaccin}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                        <TabItem Header="Vaccinations de l'animal">
+                            <DataGrid ItemsSource="{Binding VaccinationsAnimal}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Id" Binding="{Binding IdVaccination}" Width="70"/>
+                                    <DataGridTextColumn Header="Date" Binding="{Binding DateVaccin, StringFormat=dd/MM/yyyy}" Width="120"/>
+                                    <DataGridTextColumn Header="Vaccin" Binding="{Binding NomVaccin}" Width="180"/>
+                                    <DataGridTextColumn Header="État" Binding="{Binding FaitTexte}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>
+

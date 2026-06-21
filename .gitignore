@@ -1,0 +1,14 @@
+# Binaires
+bin/
+obj/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Système
+.DS_Store
+Thumbs.db
